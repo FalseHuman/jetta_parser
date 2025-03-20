@@ -168,15 +168,20 @@ class JettaParser:
     def parse_product(self, product_url: str, category: str, subcategory: str) -> Optional[Product]:
         """Parse individual product data from its URL."""
         try:
-            # Get product name
+            # Get product name and remove article number
             name = self.driver.find_element(By.CLASS_NAME, "content_navi_title").text
+            # Remove article number (format: 00-XXXXXX) from the beginning of the name
+            name = name.split(' ', 1)[1] if ' ' in name else name
             url = product_url
             
             # Get price and currency
             price_element = self.driver.find_element(By.CLASS_NAME, "item_page_cd1_d2_i1_d1price_d2")
-            price_text = price_element.text.replace(' ', '').replace(',', '.').replace('₽', '').strip()
+            currency_element = price_element.find_element(By.TAG_NAME, "span")
+            currency = currency_element.get_attribute("content")  # Get currency from content attribute
+            
+            # Get price text and clean it
+            price_text = price_element.text.replace(' ', '').replace(',', '.').strip()
             price = float(price_text)
-            currency = "RUB"
             
             # Get packaging and min order
             info_text = self.driver.find_element(By.CLASS_NAME, "item-page_smalldescription").text
